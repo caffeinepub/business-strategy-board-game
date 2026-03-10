@@ -164,7 +164,7 @@ actor {
       case (null) { #err("Room not found") };
       case (?game) {
         if (game.gameStarted) { return #err("Game already started") };
-        if (game.players.size() >= 4) { return #err("Room is full") };
+        if (game.players.size() >= 12) { return #err("Room is full (max 12 players)") };
 
         let playerId = "player-" # Time.now().toNat().toText();
         let newPlayer = {
@@ -192,7 +192,7 @@ actor {
       case (null) { #err("Room not found") };
       case (?game) {
         if (playerId != game.hostId) { return #err("Only the host can start the game") };
-        if (game.players.size() < 2) { return #err("Need at least 2 players") };
+        if (game.players.size() < 2) { return #err("Need at least 2 players to start") };
         if (game.gameStarted) { return #err("Game already started") };
 
         let updatedGame : GameState = {
@@ -267,7 +267,8 @@ actor {
           };
           games.add(roomCode, updatedGame);
         };
-        #ok("Rolled " # diceValue.toText() # " and moved to tile " # newPosition.toText());
+        // Return "diceValue:newPosition" so frontend can parse both
+        #ok(diceValue.toText() # ":" # newPosition.toText());
       };
     };
   };

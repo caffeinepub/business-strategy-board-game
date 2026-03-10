@@ -45,7 +45,7 @@ export default function WaitingRoom({ session, gameState, onLeave }: Props) {
   }
 
   const players = gameState?.players ?? [];
-  const canStart = session.isHost && players.length >= 1;
+  const canStart = session.isHost && players.length >= 2;
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -86,7 +86,12 @@ export default function WaitingRoom({ session, gameState, onLeave }: Props) {
               <span className="font-mono text-4xl font-black gold-text tracking-[0.2em]">
                 {session.roomCode}
               </span>
-              <Button variant="ghost" size="icon" onClick={copyCode}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={copyCode}
+                data-ocid="waiting.copy_button"
+              >
                 <Copy className="w-5 h-5" />
               </Button>
             </div>
@@ -101,7 +106,7 @@ export default function WaitingRoom({ session, gameState, onLeave }: Props) {
           <CardHeader className="pb-3">
             <CardTitle className="font-display text-base flex items-center gap-2">
               <Users className="w-4 h-4" />
-              Players ({players.length})
+              Players ({players.length}/12)
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -144,17 +149,24 @@ export default function WaitingRoom({ session, gameState, onLeave }: Props) {
         {/* Actions */}
         <div className="space-y-2">
           {session.isHost ? (
-            <Button
-              data-ocid="waiting.start_button"
-              onClick={handleStart}
-              disabled={!canStart || startGame.isPending}
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-base h-12 animate-pulse-glow"
-            >
-              {startGame.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : null}
-              {canStart ? "Start Game" : "Waiting for players..."}
-            </Button>
+            <>
+              {!canStart && players.length < 2 && (
+                <p className="text-center text-xs text-muted-foreground">
+                  Need at least 2 players to start (currently {players.length})
+                </p>
+              )}
+              <Button
+                data-ocid="waiting.start_button"
+                onClick={handleStart}
+                disabled={!canStart || startGame.isPending}
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-base h-12 animate-pulse-glow"
+              >
+                {startGame.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : null}
+                {canStart ? "Start Game" : "Waiting for players..."}
+              </Button>
+            </>
           ) : (
             <div className="text-center py-3 text-muted-foreground text-sm flex items-center justify-center gap-2">
               <Clock className="w-4 h-4 animate-pulse" />
@@ -165,6 +177,7 @@ export default function WaitingRoom({ session, gameState, onLeave }: Props) {
             variant="ghost"
             className="w-full text-muted-foreground"
             onClick={onLeave}
+            data-ocid="waiting.leave_button"
           >
             Leave Room
           </Button>

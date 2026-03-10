@@ -20,7 +20,7 @@ import {
   Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import type { SessionData } from "../App";
 import type { Player } from "../backend.d";
@@ -65,6 +65,12 @@ const PLAYER_COLORS = [
   "#a855f7",
   "#ef4444",
   "#eab308",
+  "#06b6d4",
+  "#ec4899",
+  "#84cc16",
+  "#f59e0b",
+  "#8b5cf6",
+  "#14b8a6",
 ];
 
 function getTileClass(tileType: TileType): string {
@@ -93,7 +99,7 @@ function getTileEvent(tileType: TileType): string {
     case TileType.decision:
       return "+5 Reputation gained! Strategic decision made.";
     case TileType.final_:
-      return "🎉 You reached the finish line!";
+      return "You reached the finish line!";
     case TileType.start:
       return "Back to the beginning. +10 Capital for passing Go!";
     default:
@@ -102,19 +108,9 @@ function getTileEvent(tileType: TileType): string {
 }
 
 // Board layout: 28 tiles arranged as a rectangular loop
-// Bottom row (left->right): 0-7 (8 tiles)
-// Right column (bottom->top): 8-13 (6 tiles)
-// Top row (right->left): 14-20 (7 tiles)
-// Left column (top->bottom): 21-27 (7 tiles)
 function getBoardLayout() {
   const COLS = 8;
   const ROWS = 6;
-
-  // Each tile gets grid position [col, row] in a 8x6 grid
-  // Bottom row: tiles 0-7, row=ROWS-1, col=0..7
-  // Right column: tiles 8-13, col=COLS-1, row=ROWS-2..1
-  // Top row: tiles 14-20, row=0, col=COLS-2..0
-  // Left column: tiles 21-27, col=0, row=1..ROWS-1
   const positions: Record<number, [number, number]> = {};
 
   // Bottom row: 0-7
@@ -185,13 +181,11 @@ export default function GameBoard({ session, onLeave }: Props) {
         toast.error(result.err);
         return;
       }
-      const diceValue = Number.parseInt(result.ok);
-      // Get new position after roll
-      await new Promise((r) => setTimeout(r, 300));
-      const newPos = myPlayer
-        ? (Number(myPlayer.position) + diceValue) % 28
-        : 0;
-      const tile = TILES[newPos];
+      // Backend returns "diceValue:newPosition"
+      const parts = result.ok.split(":");
+      const diceValue = Number.parseInt(parts[0] ?? "1", 10);
+      const newPos = Number.parseInt(parts[1] ?? "0", 10);
+      const tile = TILES[newPos] ?? TILES[0];
       setEventModal({
         diceValue,
         tileName: tile.name,
@@ -244,7 +238,12 @@ export default function GameBoard({ session, onLeave }: Props) {
               {Number(gameState?.round ?? 1)}
             </span>
           </span>
-          <Button variant="ghost" size="sm" onClick={onLeave}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onLeave}
+            data-ocid="game.leave_button"
+          >
             <LogOut className="w-4 h-4 mr-1" /> Leave
           </Button>
         </div>
@@ -434,7 +433,11 @@ export default function GameBoard({ session, onLeave }: Props) {
                       <div
                         key={p.id}
                         data-ocid={`leaderboard.item.${i + 1}`}
-                        className={`flex items-center gap-2 p-1.5 rounded-md ${p.id === session.playerId ? "bg-primary/10 border border-primary/20" : ""}`}
+                        className={`flex items-center gap-2 p-1.5 rounded-md ${
+                          p.id === session.playerId
+                            ? "bg-primary/10 border border-primary/20"
+                            : ""
+                        }`}
                       >
                         <span className="text-xs font-bold w-4 text-muted-foreground">
                           {i + 1}
@@ -530,7 +533,7 @@ export default function GameBoard({ session, onLeave }: Props) {
               <DialogHeader>
                 <DialogTitle className="font-display text-xl text-center">
                   <span className="gold-text">
-                    🎲 Rolled a {eventModal.diceValue}!
+                    Rolled a {eventModal.diceValue}!
                   </span>
                 </DialogTitle>
               </DialogHeader>
