@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Founder's Launchpad — HOST</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --navy:#0a0e1a;--navy2:#0f1626;--navy3:#161e35;--navy4:#1d2745;
+  --gold:#f5c842;--gold2:#e8b520;--gold3:#ffd966;
+  --teal:#00c9b1;--pink:#ff5c87;--purple:#9b59ff;
+  --orange:#ff7c35;--red:#ff3d5a;--blue:#2d9cff;--green:#2dff9c;
+  --border:rgba(245,200,66,.15);--text:#e8eaf2;--muted:rgba(232,234,242,.45);--panel:rgba(15,22,38,.92);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);overflow:hidden}
+.screen{display:none;width:100vw;height:100vh}
+.screen.active{display:flex}
+
+/* ── HOST BADGE ── */
+.host-badge{
+  position:fixed;top:10px;left:50%;transform:translateX(-50%);
+  background:var(--gold);color:var(--navy);
+  font-family:'Bebas Neue',cursive;font-size:.85rem;letter-spacing:2px;
+  padding:4px 16px;border-radius:20px;z-index:999;
+  box-shadow:0 2px 12px rgba(245,200,66,.4);
+}
+
+/* ── LOBBY ── */
+#lobby-screen{
+  flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 0%,rgba(245,200,66,.12) 0%,transparent 65%),var(--navy);
+  overflow-y:auto;padding:50px 20px 30px;
+}
+.lobby-logo{font-family:'Bebas Neue',cursive;font-size:clamp(2.2rem,5vw,3.8rem);color:var(--gold);letter-spacing:4px;text-align:center;text-shadow:0 0 60px rgba(245,200,66,.4);margin-bottom:4px}
+.lobby-sub{font-size:.85rem;color:var(--muted);letter-spacing:3px;text-transform:uppercase;text-align:center;margin-bottom:32px}
+.lobby-card{background:var(--navy3);border:1px solid var(--border);border-radius:20px;padding:28px 32px;width:min(860px,95vw);box-shadow:0 24px 80px rgba(0,0,0,.5)}
+.lobby-section-title{font-family:'Bebas Neue',cursive;letter-spacing:2px;font-size:1rem;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.lobby-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.host-setup{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+.field-group{display:flex;flex-direction:column;gap:5px}
+.field-group label{font-size:.75rem;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-weight:600}
+.field-group input,.field-group select{background:var(--navy4);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 13px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s}
+.field-group input:focus,.field-group select:focus{border-color:var(--gold)}
+.session-display{background:var(--navy4);border:2px solid var(--gold);border-radius:12px;padding:14px 20px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sd-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.sd-code{font-family:'Bebas Neue',cursive;font-size:2rem;color:var(--gold);letter-spacing:4px}
+.sd-hint{font-size:.75rem;color:var(--muted);margin-top:3px}
+.sd-share{background:var(--gold);color:var(--navy);border:none;border-radius:8px;padding:8px 16px;font-family:'Bebas Neue',cursive;font-size:.9rem;letter-spacing:1px;cursor:pointer;transition:all .15s}
+.sd-share:hover{background:var(--gold3)}
+.players-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:22px}
+.player-slot{background:var(--navy4);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 9px;display:flex;flex-direction:column;gap:7px;transition:border-color .2s}
+.player-slot:focus-within{border-color:rgba(245,200,66,.4)}
+.slot-num{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--gold);opacity:.7}
+.slot-emoji-row{display:flex;align-items:center;gap:6px}
+.slot-emoji{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;border:1px solid rgba(255,255,255,.1)}
+.slot-name-input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600}
+.slot-name-input::placeholder{color:var(--muted)}
+.lobby-btn{width:100%;padding:15px;background:var(--gold);color:var(--navy);border:none;border-radius:12px;font-family:'Bebas Neue',cursive;font-size:1.3rem;letter-spacing:2px;cursor:pointer;transition:all .2s;box-shadow:0 4px 24px rgba(245,200,66,.3)}
+.lobby-btn:hover{background:var(--gold3);transform:translateY(-1px)}
+.lobby-btn.secondary{background:transparent;color:var(--gold);border:1px solid var(--gold);box-shadow:none;margin-top:8px}
+.lobby-btn.secondary:hover{background:rgba(245,200,66,.08)}
+
+/* ── GAME ── */
+#game-screen{flex-direction:row;overflow:hidden}
+
+/* LEFT */
+#left-panel{width:210px;min-width:210px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel-header{padding:12px 14px 9px;border-bottom:1px solid var(--border)}
+.panel-title{font-family:'Bebas Neue',cursive;letter-spacing:2px;font-size:.9rem;color:var(--gold)}
+.players-list{flex:1;overflow-y:auto;padding:7px;display:flex;flex-direction:column;gap:4px}
+.players-list::-webkit-scrollbar{width:3px}
+.players-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.player-card{background:var(--navy3);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:7px 9px;display:flex;align-items:center;gap:7px;transition:all .2s;position:relative}
+.player-card.current-turn{border-color:rgba(245,200,66,.5);background:rgba(245,200,66,.07);box-shadow:0 0 14px rgba(245,200,66,.1)}
+.pc-token{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;position:relative}
+.focus-dot{position:absolute;top:-2px;right:-2px;width:7px;height:7px;border-radius:50%;background:var(--green);border:1px solid var(--navy)}
+.focus-dot.yellow{background:var(--gold)}
+.focus-dot.red{background:var(--red);animation:pulse-red .8s infinite}
+@keyframes pulse-red{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.pc-info{flex:1;min-width:0}
+.pc-name{font-size:.76rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-pos{font-size:.63rem;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-capital{font-family:'JetBrains Mono',monospace;font-size:.63rem;color:var(--teal);margin-top:1px}
+.turn-indicator{width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.quarter-display{padding:11px 14px;border-top:1px solid var(--border)}
+.qd-label{font-size:.63rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.qd-val{font-family:'Bebas Neue',cursive;font-size:1.1rem;color:var(--gold);letter-spacing:1px}
+.qd-progress{margin-top:5px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.qd-bar{height:100%;background:var(--gold);border-radius:2px;transition:width .5s ease}
+
+/* BOARD */
+#board-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:10px;overflow:hidden;background:radial-gradient(ellipse at center,rgba(245,200,66,.04) 0%,transparent 70%)}
+.board{background:#FFD93D;border-radius:16px;border:4px solid #e6b800;box-shadow:0 0 60px rgba(245,200,66,.2),0 20px 60px rgba(0,0,0,.6);display:grid;grid-template-columns:130px repeat(6,1fr) 130px;grid-template-rows:90px repeat(6,1fr) 90px;gap:4px;padding:6px;width:100%;max-width:820px;aspect-ratio:1.5/1}
+.sq{border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-size:clamp(.4rem,.62vw,.6rem);font-weight:700;line-height:1.25;padding:4px 5px;position:relative;border:2px solid rgba(0,0,0,.12);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);overflow:visible;cursor:pointer;transition:transform .15s,box-shadow .15s;user-select:none}
+.sq:hover{transform:scale(1.04);z-index:4}
+.sq.highlighted{box-shadow:0 0 0 3px #fff,0 0 20px rgba(255,255,255,.6);transform:scale(1.06);z-index:5;animation:sqPulse .6s ease-in-out infinite alternate}
+@keyframes sqPulse{from{box-shadow:0 0 0 2px #fff,0 0 12px rgba(255,255,255,.4)}to{box-shadow:0 0 0 4px #fff,0 0 28px rgba(255,255,255,.8)}}
+.sq.corner{font-family:'Bebas Neue',cursive;font-size:clamp(.52rem,.85vw,.75rem);letter-spacing:1px;background:#FFD93D!important;color:#0a0e1a!important;text-shadow:none;border:3px solid #e6b800}
+.sq.ops{background:#4ECDC4}.sq.mktg{background:#FF6B9D}.sq.innov{background:#C77DFF}
+.sq.fin{background:#1E90FF}.sq.sor{background:#FF8C42}.sq.sred{background:#FF4757}
+.sq-label{position:relative;z-index:2;pointer-events:none}
+.board-center{grid-column:2/8;grid-row:2/8;background:#FFD93D;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px;position:relative;overflow:hidden}
+.board-center::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(255,255,255,.25) 0%,transparent 70%);pointer-events:none}
+.board-title{font-family:'Bebas Neue',cursive;font-size:clamp(1rem,2.2vw,1.8rem);color:#0a0e1a;letter-spacing:2px;text-align:center;line-height:1.2}
+#board-status{font-size:clamp(.6rem,1.1vw,.85rem);color:rgba(10,14,26,.6);font-weight:600;min-height:1.2em;text-align:center}
+.tslot{position:absolute;bottom:3px;left:0;right:0;display:flex;flex-wrap:wrap;justify-content:center;gap:1px;z-index:3;pointer-events:none}
+.tok{font-size:clamp(.6rem,1.1vw,.9rem);line-height:1;filter:drop-shadow(0 2px 3px rgba(0,0,0,.7));transition:all .3s}
+.tok.moving{animation:tokenMove .5s ease-in-out}
+@keyframes tokenMove{0%{transform:translateY(0) scale(1)}30%{transform:translateY(-12px) scale(1.3)}70%{transform:translateY(-8px) scale(1.2)}100%{transform:translateY(0) scale(1)}}
+
+/* RIGHT PANEL */
+#right-panel{width:196px;min-width:196px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:14px 12px;gap:12px;overflow-y:auto}
+#right-panel::-webkit-scrollbar{width:3px}
+#right-panel::-webkit-scrollbar-thumb{background:var(--border)}
+.rp-title{font-family:'Bebas Neue',cursive;letter-spacing:2px;font-size:.9rem;color:var(--gold);align-self:flex-start}
+.dice-container{display:flex;flex-direction:column;align-items:center;gap:7px;width:100%}
+#dice-btn{width:96px;height:96px;background:#fff;border:3px solid var(--navy);border-radius:20px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 6px 0 rgba(0,0,0,.4),0 0 30px rgba(245,200,66,.15);transition:all .15s;user-select:none}
+#dice-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 0 rgba(0,0,0,.4),0 0 40px rgba(245,200,66,.25)}
+#dice-btn:active:not(:disabled){transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.4)}
+#dice-btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+#dice-btn.rolling{animation:diceRoll .65s cubic-bezier(.36,.07,.19,.97)}
+@keyframes diceRoll{0%{transform:rotate(0) scale(1)}20%{transform:rotate(72deg) scale(.7)}40%{transform:rotate(144deg) scale(1.2)}60%{transform:rotate(216deg) scale(.8)}80%{transform:rotate(288deg) scale(1.1)}100%{transform:rotate(360deg) scale(1)}}
+#dice-face{font-size:2.8rem;line-height:1}
+#dice-number{font-family:'Bebas Neue',cursive;font-size:1rem;color:var(--navy);letter-spacing:1px;min-height:1em}
+#dice-label{font-size:.7rem;color:var(--muted);font-weight:600;text-align:center}
+.turn-box{width:100%;background:var(--navy3);border:1px solid var(--border);border-radius:12px;padding:11px 9px;text-align:center}
+.tb-label{font-size:.63rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.tb-emoji{font-size:1.7rem;margin-bottom:3px}
+.tb-name{font-weight:700;font-size:.8rem;margin-bottom:2px}
+.tb-sq{font-size:.66rem;color:var(--muted);line-height:1.3}
+
+/* HOST CONTROLS */
+.host-controls{width:100%;display:flex;flex-direction:column;gap:5px}
+.hc-title{font-family:'Bebas Neue',cursive;letter-spacing:1px;font-size:.8rem;color:var(--gold);margin-bottom:1px}
+.hc-btn{padding:6px 9px;background:var(--navy3);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:var(--text);font-size:.7rem;font-weight:600;cursor:pointer;transition:all .15s;text-align:left;display:flex;align-items:center;gap:5px}
+.hc-btn:hover{border-color:rgba(245,200,66,.3);background:rgba(245,200,66,.06)}
+.hc-btn.danger:hover{border-color:rgba(255,61,90,.4);background:rgba(255,61,90,.06)}
+
+/* MODAL */
+#modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center}
+#modal-overlay.show{display:flex}
+.modal{background:var(--navy2);border:1px solid var(--border);border-radius:20px;padding:26px 30px;width:min(560px,92vw);max-height:85vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.7);animation:modalIn .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes modalIn{from{opacity:0;transform:scale(.85) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px}
+.modal-sq-icon{font-size:2.2rem;flex-shrink:0}
+.modal-sq-name{font-family:'Bebas Neue',cursive;font-size:1.4rem;letter-spacing:2px;color:var(--gold);line-height:1.1}
+.modal-player-tag{font-size:.76rem;color:var(--muted);margin-top:3px;font-weight:600}
+.timer-wrap{display:flex;align-items:center;justify-content:center;margin-bottom:18px;gap:14px}
+.timer-ring{position:relative;width:80px;height:80px;flex-shrink:0}
+.timer-ring svg{transform:rotate(-90deg)}
+.timer-ring circle.track{fill:none;stroke:rgba(255,255,255,.08);stroke-width:6}
+.timer-ring circle.fill{fill:none;stroke:var(--green);stroke-width:6;stroke-linecap:round;stroke-dasharray:220;stroke-dashoffset:0;transition:stroke-dashoffset .9s linear,stroke .3s}
+.timer-ring circle.fill.warn{stroke:var(--gold)}
+.timer-ring circle.fill.danger{stroke:var(--red)}
+.timer-number{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:1.5rem;color:var(--text)}
+.timer-info{flex:1}
+.ti-status{font-size:.76rem;color:var(--muted);font-weight:600;margin-bottom:4px}
+.ti-penalty{font-size:.74rem;color:var(--red);font-weight:700;min-height:1em}
+.modal-scenario{background:var(--navy3);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:13px 15px;font-size:.83rem;line-height:1.6;color:rgba(232,234,242,.8);margin-bottom:16px}
+.modal-scenario strong{color:var(--gold)}
+.modal-options{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.opt-btn{padding:11px 15px;background:var(--navy3);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--text);font-size:.8rem;font-weight:600;cursor:pointer;text-align:left;transition:all .2s;display:flex;gap:9px;align-items:flex-start}
+.opt-btn:hover{border-color:rgba(245,200,66,.4);background:rgba(245,200,66,.06)}
+.opt-btn.selected{border-color:var(--gold);background:rgba(245,200,66,.12)}
+.opt-btn.auto-selected{border-color:var(--red);background:rgba(255,61,90,.1)}
+.opt-tag{background:var(--gold);color:var(--navy);padding:1px 7px;border-radius:5px;font-size:.68rem;font-weight:800;flex-shrink:0;margin-top:1px}
+.opt-tag.c{background:var(--red);color:#fff}
+
+/* HOST DASHBOARD */
+#host-dash{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(6px);z-index:200;display:none;flex-direction:column;overflow:hidden}
+#host-dash.show{display:flex}
+.hd-header{background:var(--navy2);border-bottom:1px solid var(--border);padding:13px 22px;display:flex;align-items:center;justify-content:space-between}
+.hd-title{font-family:'Bebas Neue',cursive;font-size:1.3rem;color:var(--gold);letter-spacing:3px}
+.hd-close{background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:8px;color:var(--text);padding:5px 14px;cursor:pointer;font-size:.8rem;font-weight:600;transition:all .15s}
+.hd-close:hover{border-color:var(--red);color:var(--red)}
+.hd-body{flex:1;overflow:auto;padding:18px 22px}
+.hd-table{width:100%;border-collapse:collapse;font-size:.76rem}
+.hd-table th{text-align:left;padding:7px 11px;border-bottom:1px solid var(--border);color:var(--gold);font-family:'Bebas Neue',cursive;letter-spacing:1px;font-size:.78rem;white-space:nowrap}
+.hd-table td{padding:9px 11px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+.hd-table tr:hover td{background:rgba(255,255,255,.02)}
+.focus-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:20px;font-size:.66rem;font-weight:700}
+.focus-badge.green{background:rgba(45,255,156,.15);color:var(--green)}
+.focus-badge.yellow{background:rgba(245,200,66,.15);color:var(--gold)}
+.focus-badge.red{background:rgba(255,61,90,.15);color:var(--red)}
+.hd-action-btn{padding:3px 9px;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:transparent;color:var(--text);font-size:.68rem;cursor:pointer;margin-right:3px;transition:all .15s}
+.hd-action-btn:hover{border-color:var(--gold);color:var(--gold)}
+.hd-action-btn.red-btn:hover{border-color:var(--red);color:var(--red)}
+.hd-footer{background:var(--navy2);border-top:1px solid var(--border);padding:12px 22px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hd-footer-btn{padding:7px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:var(--navy3);color:var(--text);font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s}
+.hd-footer-btn:hover{border-color:var(--gold);background:rgba(245,200,66,.08);color:var(--gold)}
+.hd-footer-btn.danger-btn:hover{border-color:var(--red);background:rgba(255,61,90,.08);color:var(--red)}
+
+/* DECISION HISTORY */
+.hd-history{margin-top:20px}
+.hd-history h3{font-family:'Bebas Neue',cursive;color:var(--gold);letter-spacing:2px;font-size:.9rem;margin-bottom:10px}
+.hist-row{background:var(--navy3);border-radius:8px;padding:8px 12px;margin-bottom:5px;font-size:.74rem;border-left:3px solid var(--border)}
+.hist-row.gain{border-left-color:var(--teal)}
+.hist-row.loss{border-left-color:var(--red)}
+
+/* END SCREEN */
+#end-screen{flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 20%,rgba(245,200,66,.15) 0%,transparent 60%),var(--navy);overflow-y:auto;padding:30px 20px}
+.end-title{font-family:'Bebas Neue',cursive;font-size:clamp(2rem,5vw,3.5rem);color:var(--gold);letter-spacing:4px;text-align:center;margin-bottom:6px;text-shadow:0 0 60px rgba(245,200,66,.5)}
+.end-sub{font-size:.83rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;text-align:center;margin-bottom:32px}
+.leaderboard{width:min(720px,95vw);display:flex;flex-direction:column;gap:7px;margin-bottom:28px}
+.lb-row{background:var(--navy3);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:13px 18px;display:grid;grid-template-columns:48px 44px 1fr auto;align-items:center;gap:10px;animation:lbSlide .5s ease backwards}
+.lb-row:nth-child(1){border-color:rgba(245,200,66,.4);background:rgba(245,200,66,.06)}
+.lb-row:nth-child(2){border-color:rgba(192,192,192,.3)}
+.lb-row:nth-child(3){border-color:rgba(205,127,50,.3)}
+@keyframes lbSlide{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+.lb-rank{font-family:'Bebas Neue',cursive;font-size:1.8rem;text-align:center}
+.lb-row:nth-child(1) .lb-rank{color:var(--gold)}
+.lb-row:nth-child(2) .lb-rank{color:#c0c0c0}
+.lb-row:nth-child(3) .lb-rank{color:#cd7f32}
+.lb-token{font-size:1.5rem;text-align:center}
+.lb-name{font-weight:700;font-size:.92rem;margin-bottom:2px}
+.lb-breakdown{font-size:.66rem;color:var(--muted)}
+.lb-score{font-family:'Bebas Neue',cursive;font-size:1.6rem;color:var(--teal);text-align:right}
+.play-again-btn{padding:13px 36px;background:var(--gold);color:var(--navy);border:none;border-radius:12px;font-family:'Bebas Neue',cursive;font-size:1.2rem;letter-spacing:2px;cursor:pointer;box-shadow:0 4px 24px rgba(245,200,66,.3);transition:all .2s}
+.play-again-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(245,200,66,.4)}
+
+/* TOASTS */
+#toast-area{position:fixed;top:14px;right:14px;z-index:300;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.toast{background:var(--navy3);border:1px solid var(--border);border-radius:10px;padding:9px 14px;font-size:.78rem;font-weight:600;max-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:toastIn .3s ease,toastOut .3s ease 2.7s forwards;pointer-events:all}
+.toast.warn{border-color:rgba(245,200,66,.4);color:var(--gold)}
+.toast.error{border-color:rgba(255,61,90,.4);color:var(--red)}
+.toast.info{border-color:rgba(0,201,177,.3);color:var(--teal)}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(20px)}}
+
+/* FOCUS WARNING */
+#focus-warning{position:fixed;inset:0;background:rgba(255,61,90,.15);border:3px solid var(--red);z-index:500;display:none;align-items:center;justify-content:center;pointer-events:none}
+#focus-warning.show{display:flex}
+.fw-inner{background:rgba(10,14,26,.95);border:2px solid var(--red);border-radius:16px;padding:22px 32px;text-align:center;pointer-events:all}
+.fw-inner h2{font-family:'Bebas Neue',cursive;color:var(--red);font-size:1.7rem;letter-spacing:2px;margin-bottom:7px}
+.fw-inner p{color:var(--text);font-size:.85rem;margin-bottom:14px}
+.fw-btn{padding:9px 26px;background:var(--red);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:.85rem}
+.num-green{color:var(--teal);font-family:'JetBrains Mono',monospace;font-size:.74rem}
+</style>
+</head>
+<body>
+
+<div class="host-badge">🔐 HOST VIEW</div>
+
+<!-- LOBBY -->
+<div id="lobby-screen" class="screen active">
+  <div class="lobby-logo">🚀 FOUNDER'S LAUNCHPAD</div>
+  <div class="lobby-sub">Host Control Panel — Strategic Business Simulation</div>
+  <div class="lobby-card">
+    <div class="lobby-section-title">🔐 Session Configuration</div>
+    <div class="host-setup">
+      <div class="field-group"><label>Host Name</label><input id="host-name" type="text" value="Game Host"></div>
+      <div class="field-group"><label>Number of Quarters</label>
+        <select id="num-quarters"><option value="6" selected>6 Quarters (Standard)</option><option value="4">4 Quarters (Short)</option><option value="8">8 Quarters (Extended)</option></select>
+      </div>
+      <div class="field-group"><label>Starting Capital (₹)</label><input id="start-capital" type="number" value="1000000" step="100000"></div>
+    </div>
+    <div class="session-display">
+      <div>
+        <div class="sd-label">Session Code — Share with Players</div>
+        <div class="sd-code" id="session-code-display">FL-XXXXXX</div>
+        <div class="sd-hint">Players open the <strong>Player File</strong> and enter this code to join</div>
+      </div>
+      <button class="sd-share" onclick="copyCode()">📋 COPY</button>
+    </div>
+    <div class="lobby-section-title">👥 Player Roster — 10 Slots</div>
+    <div class="players-grid" id="players-grid"></div>
+    <button class="lobby-btn" onclick="startGame()">🎲 LAUNCH SIMULATION</button>
+    <button class="lobby-btn secondary" onclick="fillDemo()">⚡ FILL WITH DEMO PLAYERS</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game-screen" class="screen">
+  <div id="left-panel">
+    <div class="panel-header"><div class="panel-title">👥 PLAYERS</div></div>
+    <div class="players-list" id="players-list-el"></div>
+    <div class="quarter-display">
+      <div class="qd-label">Financial Quarter</div>
+      <div class="qd-val" id="quarter-display">Q1 / 6</div>
+      <div class="qd-progress"><div class="qd-bar" id="quarter-bar" style="width:0%"></div></div>
+    </div>
+  </div>
+  <div id="board-wrap">
+    <div class="board" id="board">
+      <div class="board-center">
+        <div class="board-title">🎲 FOUNDER'S<br>LAUNCHPAD</div>
+        <div id="board-status">Waiting for first roll…</div>
+      </div>
+    </div>
+  </div>
+  <div id="right-panel">
+    <div class="rp-title">🎲 DICE</div>
+    <div class="dice-container">
+      <button id="dice-btn" disabled><div id="dice-face">🎲</div><div id="dice-number"></div></button>
+      <div id="dice-label">Waiting…</div>
+    </div>
+    <div class="turn-box">
+      <div class="tb-label">Current Turn</div>
+      <div class="tb-emoji" id="tb-emoji">—</div>
+      <div class="tb-name" id="tb-name">—</div>
+      <div class="tb-sq" id="tb-sq">—</div>
+    </div>
+    <div class="host-controls">
+      <div class="hc-title">⚙ HOST CONTROLS</div>
+      <button class="hc-btn" onclick="showHostDash()">📊 Full Dashboard</button>
+      <button class="hc-btn" onclick="togglePause()">⏸ Pause / Resume</button>
+      <button class="hc-btn" onclick="forceNextTurn()">⏭ Skip Turn</button>
+      <button class="hc-btn" onclick="endQuarterNow()">📅 End Quarter</button>
+      <button class="hc-btn danger" onclick="endGameNow()">🏁 End Game</button>
+    </div>
+  </div>
+</div>
+
+<!-- END -->
+<div id="end-screen" class="screen">
+  <div class="end-title">🏆 FINAL LEADERBOARD</div>
+  <div class="end-sub">Founder's Launchpad — Simulation Complete</div>
+  <div class="leaderboard" id="leaderboard-el"></div>
+  <button class="play-again-btn" onclick="playAgain()">↩ PLAY AGAIN</button>
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-sq-icon" id="modal-sq-icon">🏢</div>
+      <div>
+        <div class="modal-sq-name" id="modal-sq-name">Square</div>
+        <div class="modal-player-tag" id="modal-player-tag">Player</div>
+      </div>
+    </div>
+    <div class="timer-wrap">
+      <div class="timer-ring">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle class="track" cx="40" cy="40" r="35"/>
+          <circle class="fill" id="timer-circle" cx="40" cy="40" r="35"/>
+        </svg>
+        <div class="timer-number" id="timer-number">25</div>
+      </div>
+      <div class="timer-info">
+        <div class="ti-status" id="ti-status">Make your decision</div>
+        <div class="ti-penalty" id="ti-penalty"></div>
+      </div>
+    </div>
+    <div class="modal-scenario" id="modal-scenario"></div>
+    <div class="modal-options" id="modal-options"></div>
+  </div>
+</div>
+
+<!-- HOST DASHBOARD -->
+<div id="host-dash">
+  <div class="hd-header">
+    <div class="hd-title">🔐 HOST CONTROL DASHBOARD</div>
+    <button class="hd-close" onclick="hideHostDash()">✕ CLOSE</button>
+  </div>
+  <div class="hd-body">
+    <table class="hd-table">
+      <thead><tr>
+        <th>Player</th><th>Capital</th><th>Rep</th><th>Inn</th><th>Cap</th>
+        <th>Block</th><th>Q</th><th>Focus</th><th>Violations</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="host-tbody"></tbody>
+    </table>
+    <div class="hd-history">
+      <h3>📜 DECISION LOG</h3>
+      <div id="decision-log"></div>
+    </div>
+  </div>
+  <div class="hd-footer">
+    <button class="hd-footer-btn" onclick="togglePause()">⏸ Pause / Resume</button>
+    <button class="hd-footer-btn" onclick="forceNextTurn()">⏭ Skip Turn</button>
+    <button class="hd-footer-btn" onclick="endQuarterNow()">📅 End Quarter</button>
+    <button class="hd-footer-btn danger-btn" onclick="endGameNow()">🏁 End Game</button>
+  </div>
+</div>
+
+<!-- FOCUS WARNING -->
+<div id="focus-warning">
+  <div class="fw-inner">
+    <h2>⚠ FOCUS VIOLATION</h2>
+    <p id="fw-msg">Tab switch detected.</p>
+    <button class="fw-btn" onclick="dismissFocusWarning()">RETURN TO GAME</button>
+  </div>
+</div>
+<div id="toast-area"></div>
+
+<script>
+const SQ=[
+  {n:"START\nFounder's Launchpad",t:"corner",e:"🚀",scenario:null},
+  {n:"Manufacturing Hub",t:"ops",e:"🏭",scenario:"mfg"},
+  {n:"Inventory Intelligence",t:"ops",e:"📦",scenario:"inv"},
+  {n:"Capacity Scaling Yard",t:"sor",e:"📈",scenario:"cap"},
+  {n:"Supply Chain Grid",t:"ops",e:"🔗",scenario:"sup"},
+  {n:"Procurement Exchange",t:"ops",e:"🤝",scenario:"pro"},
+  {n:"Quality Control Matrix",t:"ops",e:"✅",scenario:"qlt"},
+  {n:"STRATEGIC AUDIT\nQUADRANT",t:"corner",e:"🔍",scenario:"audit"},
+  {n:"Branding Engine",t:"mktg",e:"🎨",scenario:"brand"},
+  {n:"Digital Growth Node",t:"mktg",e:"💻",scenario:"dig"},
+  {n:"Customer Insight Lab",t:"mktg",e:"👥",scenario:"cust"},
+  {n:"Pricing Strategy Hub",t:"mktg",e:"💲",scenario:"price"},
+  {n:"Market Expansion Portal",t:"mktg",e:"🌍",scenario:"mkt"},
+  {n:"Marketing Momentum Street",t:"sred",e:"🔥",scenario:"mom"},
+  {n:"ECONOMIC SHIFT\nQUADRANT",t:"corner",e:"⚡",scenario:"econ"},
+  {n:"R&D Core",t:"sred",e:"🔬",scenario:"rnd"},
+  {n:"Product Evolution Lab",t:"innov",e:"🧪",scenario:"prod"},
+  {n:"Automation Hub",t:"innov",e:"🤖",scenario:"auto"},
+  {n:"Data Intelligence Center",t:"sor",e:"📊",scenario:"data"},
+  {n:"Sustainability Nexus",t:"innov",e:"🌱",scenario:"sust"},
+  {n:"AI Strategy Lab",t:"innov",e:"🧠",scenario:"ai"},
+  {n:"CAPITAL INFUSION\nQUADRANT",t:"corner",e:"💰",scenario:"capital"},
+  {n:"Investor Relations Deck",t:"fin",e:"📋",scenario:"inv_rel"},
+  {n:"Treasury Command",t:"fin",e:"🏦",scenario:"treas"},
+  {n:"Banking & Leverage Office",t:"fin",e:"💳",scenario:"bank"},
+  {n:"M&A Arena",t:"sor",e:"⚖️",scenario:"ma"},
+  {n:"Compliance Chamber",t:"fin",e:"📜",scenario:"comp"},
+  {n:"Crisis Control Room",t:"sred",e:"🚨",scenario:"crisis"},
+];
+const POS=[[1,1],[2,1],[3,1],[4,1],[5,1],[6,1],[7,1],[8,1],[8,2],[8,3],[8,4],[8,5],[8,6],[8,7],[8,8],[7,8],[6,8],[5,8],[4,8],[3,8],[2,8],[1,8],[1,7],[1,6],[1,5],[1,4],[1,3],[1,2]];
+const EMOJIS=["🚀","🦁","🐯","🦊","🐸","🦋","🐉","⭐","💎","🏆"];
+const COLORS=["#FF4757","#4ECDC4","#2ED573","#FFD93D","#C77DFF","#FF8C42","#aaa","#1E90FF","#FF6B9D","#00c9b1"];
+const DICE=["⚀","⚁","⚂","⚃","⚄","⚅"];
+const SCENARIOS={
+  mfg:{title:"Manufacturing Decision",text:"Your factory line is at <strong>80% capacity</strong>. A supplier offers a bulk deal but requires 3-month commitment. Market demand is volatile.",opts:[{l:"A",t:"Accept bulk deal — secure supply chain",cap:+80000,rep:+5,inn:0,cpty:+10},{l:"B",t:"Negotiate shorter contract — maintain flexibility",cap:+30000,rep:+10,inn:+5,cpty:+5},{l:"C",t:"Decline — preserve liquidity",cap:-10000,rep:-5,inn:0,cpty:0}]},
+  inv:{title:"Inventory Intelligence",text:"Warehouse AI flags <strong>15% excess stock</strong> on slow-moving SKUs. You can liquidate at a loss, hold, or redistribute to new markets.",opts:[{l:"A",t:"Liquidate at 30% discount",cap:-50000,rep:0,inn:+5,cpty:+8},{l:"B",t:"Redistribute to emerging market",cap:-20000,rep:+15,inn:+10,cpty:+5},{l:"C",t:"Hold and wait for demand recovery",cap:-5000,rep:-8,inn:0,cpty:-5}]},
+  cap:{title:"Capacity Scaling Crisis",text:"Your CTO proposes a <strong>₹5 Crore capacity expansion</strong>. ROI projected in 18 months. Funding requires bridge loan.",opts:[{l:"A",t:"Full expansion — aggressive growth",cap:-200000,rep:+20,inn:+15,cpty:+30},{l:"B",t:"Phased expansion — 50% now",cap:-100000,rep:+10,inn:+10,cpty:+15},{l:"C",t:"Defer expansion — protect capital",cap:+50000,rep:-5,inn:0,cpty:0}]},
+  sup:{title:"Supply Chain Disruption",text:"Port strike threatens delivery of <strong>critical components</strong>. Air freight costs 4× more. Production halt costs ₹2L/day.",opts:[{l:"A",t:"Activate air freight — maintain production",cap:-150000,rep:+10,inn:+5,cpty:0},{l:"B",t:"Partial air + reduce production 40%",cap:-80000,rep:0,inn:+5,cpty:-10},{l:"C",t:"Halt production — await resolution",cap:-200000,rep:-15,inn:0,cpty:-20}]},
+  pro:{title:"Procurement Exchange",text:"New vendor offers <strong>20% cost savings</strong> but has 6-month track record. Current vendor is reliable but expensive.",opts:[{l:"A",t:"Switch fully to new vendor",cap:+120000,rep:-5,inn:+5,cpty:+5},{l:"B",t:"Split 50/50 — hedge risk",cap:+60000,rep:+5,inn:+5,cpty:0},{l:"C",t:"Stay with current vendor",cap:-30000,rep:+10,inn:0,cpty:+5}]},
+  qlt:{title:"Quality Control Alert",text:"QA team discovers <strong>0.3% defect rate</strong> in latest batch. Recall would cost ₹80L but prevent reputational damage.",opts:[{l:"A",t:"Full voluntary recall — build trust",cap:-300000,rep:+25,inn:+10,cpty:-5},{l:"B",t:"Targeted recall — affected units only",cap:-120000,rep:+10,inn:+5,cpty:0},{l:"C",t:"Enhanced monitoring — no recall",cap:-20000,rep:-20,inn:0,cpty:0}]},
+  audit:{title:"Strategic Audit Initiated",text:"Board mandates a <strong>full strategic audit</strong>. External consultants find gaps in digital infrastructure and market positioning.",opts:[{l:"A",t:"Full restructuring — implement all recommendations",cap:-250000,rep:+20,inn:+20,cpty:+15},{l:"B",t:"Priority fixes only — selective implementation",cap:-100000,rep:+10,inn:+10,cpty:+5},{l:"C",t:"Acknowledge and defer — limited action",cap:-20000,rep:-10,inn:+5,cpty:0}]},
+  brand:{title:"Branding Campaign Launch",text:"Your CMO proposes a <strong>₹2Cr national branding campaign</strong>. Brand awareness is at 34%. Competitor just launched similar.",opts:[{l:"A",t:"Full campaign — dominate market narrative",cap:-200000,rep:+30,inn:+5,cpty:0},{l:"B",t:"Digital-first — lower cost, targeted",cap:-80000,rep:+15,inn:+10,cpty:0},{l:"C",t:"Defer — allocate to operations",cap:+50000,rep:-5,inn:0,cpty:+5}]},
+  dig:{title:"Digital Growth Inflection",text:"A viral campaign generates <strong>500K new leads</strong>. Server infrastructure is near capacity. Conversion rate depends on UX investment.",opts:[{l:"A",t:"Emergency infra upgrade + UX sprint",cap:-180000,rep:+20,inn:+20,cpty:+10},{l:"B",t:"Scale infrastructure only",cap:-100000,rep:+10,inn:+10,cpty:+5},{l:"C",t:"Manage with current capacity",cap:0,rep:-10,inn:+5,cpty:-5}]},
+  cust:{title:"Customer Insight Discovery",text:"Research reveals <strong>42% churn</strong> is due to post-sale support gaps. Fixing requires 6-month CX transformation.",opts:[{l:"A",t:"Full CX overhaul — long-term play",cap:-220000,rep:+35,inn:+15,cpty:+5},{l:"B",t:"Targeted support improvements",cap:-90000,rep:+15,inn:+10,cpty:0},{l:"C",t:"Self-service documentation only",cap:-15000,rep:+5,inn:+5,cpty:0}]},
+  price:{title:"Pricing Strategy Overhaul",text:"Elasticity analysis shows <strong>pricing 12% below optimal</strong>. Raising prices risks 8% volume loss but improves margins significantly.",opts:[{l:"A",t:"Full price increase — optimize margins",cap:+200000,rep:-10,inn:+5,cpty:-8},{l:"B",t:"Tiered pricing — premium + budget SKUs",cap:+80000,rep:+10,inn:+15,cpty:0},{l:"C",t:"Hold pricing — protect market share",cap:-20000,rep:+5,inn:0,cpty:+5}]},
+  mkt:{title:"Market Expansion Opportunity",text:"Southeast Asia market opening with <strong>60M TAM</strong>. First-mover advantage window is 90 days. Requires immediate investment.",opts:[{l:"A",t:"Full market entry — establish operations",cap:-350000,rep:+25,inn:+20,cpty:+25},{l:"B",t:"Partnership model — lower risk entry",cap:-150000,rep:+15,inn:+15,cpty:+10},{l:"C",t:"Market study only — defer entry",cap:-30000,rep:0,inn:+10,cpty:0}]},
+  mom:{title:"Marketing Momentum — Viral Event",text:"Your product goes viral on social. <strong>10M impressions in 24 hours</strong>. Media opportunity requires rapid response team.",opts:[{l:"A",t:"Activate PR + paid amplification",cap:-100000,rep:+40,inn:+10,cpty:0},{l:"B",t:"Organic management only",cap:-10000,rep:+20,inn:+5,cpty:0},{l:"C",t:"No action — let it fade",cap:0,rep:-5,inn:0,cpty:0}]},
+  econ:{title:"Economic Shift Detected",text:"Central bank hikes rates 75bps. Your <strong>₹8Cr floating debt</strong> costs increase ₹60L annually. Recession probability: 35%.",opts:[{l:"A",t:"Refinance to fixed rate immediately",cap:-80000,rep:+5,inn:0,cpty:0},{l:"B",t:"Partial hedging strategy",cap:-30000,rep:+10,inn:+5,cpty:0},{l:"C",t:"Monitor and adapt quarterly",cap:-60000,rep:-5,inn:0,cpty:-5}]},
+  rnd:{title:"R&D Breakthrough Alert",text:"Your lab team achieves a <strong>provisional patent breakthrough</strong>. Commercialization requires ₹3Cr. Competitor may file similar in 6 months.",opts:[{l:"A",t:"Full commercialization sprint",cap:-300000,rep:+15,inn:+40,cpty:+20},{l:"B",t:"License the patent — lower risk",cap:+100000,rep:+10,inn:+20,cpty:+5},{l:"C",t:"Defensive filing only",cap:-50000,rep:+5,inn:+15,cpty:0}]},
+  prod:{title:"Product Evolution Decision",text:"Version 3.0 roadmap requires <strong>complete architecture rewrite</strong>. 8-month delay vs incremental patches that maintain velocity.",opts:[{l:"A",t:"Full rewrite — future-proof platform",cap:-280000,rep:+10,inn:+35,cpty:+20},{l:"B",t:"Modular refactor — balanced approach",cap:-150000,rep:+10,inn:+20,cpty:+10},{l:"C",t:"Incremental patches only",cap:-40000,rep:+5,inn:+5,cpty:+5}]},
+  auto:{title:"Automation Implementation",text:"RPA deployment can <strong>reduce headcount by 18%</strong> across ops. Savings: ₹1.5Cr/yr. Retraining costs: ₹80L. Change management critical.",opts:[{l:"A",t:"Full automation + retraining program",cap:-80000,rep:+15,inn:+30,cpty:+25},{l:"B",t:"Phased automation — 50% rollout",cap:-30000,rep:+10,inn:+15,cpty:+12},{l:"C",t:"No automation — maintain workforce",cap:-150000,rep:+20,inn:0,cpty:0}]},
+  data:{title:"Data Intelligence Initiative",text:"Analytics team proposes a <strong>unified data lake</strong>. Current siloed systems cost ₹40L in inefficiency monthly.",opts:[{l:"A",t:"Enterprise data platform — full build",cap:-250000,rep:+10,inn:+30,cpty:+20},{l:"B",t:"Hybrid cloud integration — 6 months",cap:-120000,rep:+5,inn:+20,cpty:+10},{l:"C",t:"BI tools upgrade only",cap:-40000,rep:0,inn:+10,cpty:+5}]},
+  sust:{title:"Sustainability Commitment",text:"ESG report reveals <strong>carbon footprint 40% above industry average</strong>. Institutional investors require action plan within Q2.",opts:[{l:"A",t:"Full ESG transformation — net zero plan",cap:-200000,rep:+30,inn:+20,cpty:+10},{l:"B",t:"Carbon offset program + reporting",cap:-80000,rep:+20,inn:+10,cpty:0},{l:"C",t:"Compliance minimum only",cap:-20000,rep:-10,inn:0,cpty:0}]},
+  ai:{title:"AI Strategy Decision",text:"Board approves AI integration. <strong>Build vs Buy dilemma</strong>: proprietary AI costs ₹5Cr but creates moat. SaaS is faster and cheaper.",opts:[{l:"A",t:"Build proprietary AI — create moat",cap:-500000,rep:+20,inn:+50,cpty:+30},{l:"B",t:"Hybrid — build core, buy peripheral",cap:-250000,rep:+15,inn:+30,cpty:+15},{l:"C",t:"SaaS AI tools — fast deployment",cap:-80000,rep:+5,inn:+15,cpty:+10}]},
+  capital:{title:"Capital Infusion Secured",text:"A <strong>Series B term sheet</strong> arrives — ₹25Cr at 18% dilution. Alt: strategic debt at 12% interest. Growth demands capital now.",opts:[{l:"A",t:"Accept Series B — equity dilution",cap:+500000,rep:+25,inn:+15,cpty:+20},{l:"B",t:"Strategic debt — preserve equity",cap:+250000,rep:+10,inn:+5,cpty:+10},{l:"C",t:"Bootstrap — organic growth only",cap:+50000,rep:+5,inn:+10,cpty:0}]},
+  inv_rel:{title:"Investor Relations Event",text:"Annual investor day. <strong>Key institutional holders</strong> questioning growth trajectory. Strong presentation = credibility, weak = sell-off risk.",opts:[{l:"A",t:"Premium investor event — bold vision",cap:-60000,rep:+30,inn:+10,cpty:0},{l:"B",t:"Standard roadshow presentation",cap:-20000,rep:+15,inn:+5,cpty:0},{l:"C",t:"Minimal disclosure — protect strategy",cap:-5000,rep:-10,inn:0,cpty:0}]},
+  treas:{title:"Treasury Optimization",text:"₹8Cr sits in low-yield accounts. CFO proposes <strong>short-duration bond ladder</strong> generating 7.2% p.a. Risk: liquidity lock-in.",opts:[{l:"A",t:"Full treasury optimization",cap:+280000,rep:+5,inn:0,cpty:0},{l:"B",t:"50% allocation — balanced liquidity",cap:+140000,rep:+5,inn:0,cpty:0},{l:"C",t:"Maintain current liquid position",cap:+30000,rep:0,inn:0,cpty:0}]},
+  bank:{title:"Banking Leverage Decision",text:"Bank offers <strong>₹10Cr revolving credit at 11.5%</strong>. Using leverage could accelerate expansion. Current D/E ratio: 0.4x.",opts:[{l:"A",t:"Draw full credit line — aggressive expansion",cap:+300000,rep:-5,inn:+10,cpty:+30},{l:"B",t:"Draw 50% — measured growth",cap:+150000,rep:+5,inn:+5,cpty:+15},{l:"C",t:"Decline — maintain conservative balance sheet",cap:0,rep:+15,inn:0,cpty:0}]},
+  ma:{title:"M&A Opportunity",text:"Competitor distressed — <strong>acquisition opportunity at 60% discount</strong> to book. Integration costs high. Board is split.",opts:[{l:"A",t:"Full acquisition — consolidate market",cap:-400000,rep:+20,inn:+25,cpty:+40},{l:"B",t:"Asset purchase only — cherry pick",cap:-180000,rep:+10,inn:+15,cpty:+20},{l:"C",t:"Decline — focus on organic growth",cap:+50000,rep:+5,inn:+5,cpty:0}]},
+  comp:{title:"Compliance Audit Triggered",text:"Regulatory body initiates <strong>compliance review</strong> of data practices. Legal team estimates ₹50–200L exposure. Proactive disclosure reduces risk.",opts:[{l:"A",t:"Full proactive disclosure + remediation",cap:-200000,rep:+20,inn:0,cpty:0},{l:"B",t:"Targeted remediation — fix gaps quietly",cap:-80000,rep:+5,inn:0,cpty:0},{l:"C",t:"Minimum response — legal defense posture",cap:-150000,rep:-25,inn:0,cpty:0}]},
+  crisis:{title:"CRISIS: Emergency Response",text:"<strong>Critical system outage</strong> during peak trading — 6 hours down. ₹2Cr revenue at risk. Media already reporting. Board on emergency call.",opts:[{l:"A",t:"All-hands response — CEO public statement",cap:-100000,rep:+15,inn:+5,cpty:0},{l:"B",t:"Technical fix first — comms second",cap:-50000,rep:-5,inn:+5,cpty:+5},{l:"C",t:"Minimal response — downplay severity",cap:-200000,rep:-30,inn:0,cpty:-10}]},
+};
+
+let G={players:[],cur:0,quarter:1,maxQuarters:6,startCapital:1000000,paused:false,started:false,movesThisQuarter:0,timerInterval:null,timerSec:0,sessionCode:''};
+let decisionLog=[];
+
+function buildLobby(){
+  const code='FL-'+Math.random().toString(36).substr(2,6).toUpperCase();
+  G.sessionCode=code;
+  document.getElementById('session-code-display').textContent=code;
+  const grid=document.getElementById('players-grid');
+  grid.innerHTML='';
+  for(let i=0;i<10;i++){
+    grid.innerHTML+=`<div class="player-slot"><div class="slot-num">P${i+1}</div><div class="slot-emoji-row"><div class="slot-emoji" style="background:${COLORS[i]}20;border-color:${COLORS[i]}40">${EMOJIS[i]}</div><input class="slot-name-input" id="pname${i}" placeholder="Player ${i+1}" value=""></div></div>`;
+  }
+}
+
+function copyCode(){
+  navigator.clipboard.writeText(G.sessionCode).catch(()=>{});
+  toast(`Session code ${G.sessionCode} copied!`,'info');
+}
+
+function fillDemo(){
+  const names=["Arjun Shah","Priya Nair","Rohit Verma","Anjali Gupta","Vikram Patel","Shreya Joshi","Dev Kumar","Meera Rao","Aarav Singh","Kavya Menon"];
+  names.forEach((n,i)=>{const el=document.getElementById(`pname${i}`);if(el)el.value=n;});
+  toast("Demo players loaded!",'info');
+}
+
+function startGame(){
+  const names=[];
+  for(let i=0;i<10;i++){
+    const v=(document.getElementById(`pname${i}`)?.value||'').trim();
+    names.push(v||`Player ${i+1}`);
+  }
+  G.maxQuarters=+document.getElementById('num-quarters').value;
+  G.startCapital=+document.getElementById('start-capital').value||1000000;
+  G.players=names.map((name,i)=>({name,emoji:EMOJIS[i],color:COLORS[i],pos:0,capital:G.startCapital,reputation:50,innovation:30,capacity:40,violations:0,focusStatus:'green',decisionHistory:[]}));
+  G.cur=0;G.quarter=1;G.movesThisQuarter=0;G.started=true;
+  switchScreen('game-screen');
+  buildBoard();renderAll();initFocusDetection();
+  toast(`🚀 Simulation launched! Session: ${G.sessionCode}`,'info');
+}
+
+function buildBoard(){
+  const board=document.getElementById('board');
+  const center=board.querySelector('.board-center');
+  board.innerHTML='';board.appendChild(center);
+  SQ.forEach((s,idx)=>{
+    const[col,row]=POS[idx];
+    const div=document.createElement('div');
+    div.className=`sq ${s.t}`;div.id=`sq${idx}`;
+    div.style.gridColumn=col;div.style.gridRow=row;
+    div.innerHTML=`<span class="sq-label">${s.n.replace(/\n/g,'<br>')}</span><div class="tslot" id="ts${idx}"></div>`;
+    board.appendChild(div);
+  });
+  renderTokens();
+}
+
+function renderTokens(){
+  document.querySelectorAll('.tslot').forEach(el=>el.innerHTML='');
+  G.players.forEach(p=>{
+    const slot=document.getElementById(`ts${p.pos}`);
+    if(slot){const t=document.createElement('span');t.className='tok';t.textContent=p.emoji;t.title=p.name;slot.appendChild(t);}
+  });
+}
+
+function renderAll(){renderPlayerList();renderRightPanel();renderQuarterDisplay();renderTokens();}
+
+function renderPlayerList(){
+  const el=document.getElementById('players-list-el');el.innerHTML='';
+  G.players.forEach((p,i)=>{
+    const isActive=i===G.cur;
+    const div=document.createElement('div');
+    div.className='player-card'+(isActive?' current-turn':'');
+    div.innerHTML=`<div class="pc-token" style="background:${p.color}22"><span>${p.emoji}</span><span class="focus-dot ${p.focusStatus}"></span></div><div class="pc-info"><div class="pc-name" style="color:${isActive?p.color:'var(--text)'}">${p.name}</div><div class="pc-pos">Sq ${p.pos} · ${SQ[p.pos].n.replace(/\n/g,' ')}</div><div class="pc-capital">₹${fmtNum(p.capital)}</div></div>${isActive?'<div class="turn-indicator"></div>':''}`;
+    el.appendChild(div);
+  });
+}
+
+function renderRightPanel(){
+  const p=G.players[G.cur];if(!p)return;
+  document.getElementById('tb-emoji').textContent=p.emoji;
+  document.getElementById('tb-name').textContent=p.name;
+  document.getElementById('tb-name').style.color=p.color;
+  document.getElementById('tb-sq').textContent=`Sq ${p.pos} · ${SQ[p.pos].n.replace(/\n/g,' ')}`;
+  document.getElementById('dice-btn').disabled=G.paused;
+  document.getElementById('dice-label').textContent=G.paused?'⏸ Paused':`${p.name}'s turn`;
+}
+
+function renderQuarterDisplay(){
+  document.getElementById('quarter-display').textContent=`Q${G.quarter} / ${G.maxQuarters}`;
+  document.getElementById('quarter-bar').style.width=((G.quarter-1)/G.maxQuarters*100)+'%';
+}
+
+document.getElementById('dice-btn').addEventListener('click',()=>{if(!G.paused)rollDice();});
+
+function rollDice(){
+  const btn=document.getElementById('dice-btn');
+  btn.disabled=true;btn.classList.add('rolling');
+  const final=Math.floor(Math.random()*6)+1;
+  const iv=setInterval(()=>{const r=Math.floor(Math.random()*6)+1;document.getElementById('dice-face').textContent=DICE[r-1];document.getElementById('dice-number').textContent=r;},70);
+  setTimeout(()=>{
+    clearInterval(iv);btn.classList.remove('rolling');
+    document.getElementById('dice-face').textContent=DICE[final-1];
+    document.getElementById('dice-number').textContent=final;
+    document.getElementById('dice-label').textContent=`Rolled ${final}!`;
+    const p=G.players[G.cur];
+    document.getElementById('board-status').textContent=`${p.emoji} ${p.name} rolled ${final}`;
+    animateMovement(G.cur,final);
+  },650);
+}
+
+function animateMovement(playerIdx,steps){
+  const p=G.players[playerIdx];let step=0;
+  const moveStep=()=>{
+    if(step>=steps){
+      const sq=document.getElementById(`sq${p.pos}`);
+      sq?.classList.add('highlighted');setTimeout(()=>sq?.classList.remove('highlighted'),2000);
+      const slot=document.getElementById(`ts${p.pos}`);
+      if(slot?.firstChild){slot.firstChild.classList.remove('moving');void slot.firstChild.offsetWidth;slot.firstChild.classList.add('moving');}
+      document.getElementById('board-status').textContent=`${p.emoji} ${p.name} landed on ${SQ[p.pos].n.replace(/\n/g,' ')}`;
+      setTimeout(()=>openModal(playerIdx),600);return;
+    }
+    p.pos=(p.pos+1)%28;renderTokens();step++;setTimeout(moveStep,220);
+  };
+  moveStep();
+}
+
+function openModal(playerIdx){
+  const p=G.players[playerIdx];const sq=SQ[p.pos];
+  document.getElementById('modal-sq-icon').textContent=sq.e;
+  document.getElementById('modal-sq-name').textContent=sq.n.replace(/\n/g,' ');
+  document.getElementById('modal-player-tag').textContent=`${p.emoji} ${p.name} landed here`;
+  const sc=sq.scenario&&SCENARIOS[sq.scenario];
+  if(!sc){
+    document.getElementById('modal-scenario').innerHTML=`<strong>${sq.n.replace(/\n/g,' ')}</strong> — Strategic milestone. Collect ₹${fmtNum(Math.floor(G.startCapital*.05))} corner bonus.`;
+    document.getElementById('modal-options').innerHTML=`<button class="opt-btn selected" onclick="resolveModal(${playerIdx},{cap:${Math.floor(G.startCapital*.05)},rep:5,inn:5,cpty:5},'Corner Bonus')"><span class="opt-tag">✓</span>Collect Corner Bonus & Continue</button>`;
+  } else {
+    document.getElementById('modal-scenario').innerHTML=sc.text;
+    const optsEl=document.getElementById('modal-options');optsEl.innerHTML='';
+    sc.opts.forEach(opt=>{
+      const btn=document.createElement('button');btn.className='opt-btn';
+      btn.innerHTML=`<span class="opt-tag ${opt.l==='C'?'c':''}">${opt.l}</span>${opt.t}`;
+      btn.addEventListener('click',()=>resolveModal(playerIdx,opt,opt.t));
+      optsEl.appendChild(btn);
+    });
+  }
+  document.getElementById('modal-overlay').classList.add('show');
+  startTimer(playerIdx);
+}
+
+function startTimer(playerIdx){
+  clearTimerInterval();G.timerSec=25;updateTimerDisplay(25);
+  G.timerInterval=setInterval(()=>{
+    G.timerSec--;updateTimerDisplay(G.timerSec);
+    if(G.timerSec<=0){
+      clearTimerInterval();
+      const p=G.players[playerIdx];const sq=SQ[p.pos];
+      const sc2=sq.scenario&&SCENARIOS[sq.scenario];
+      let autoOpt={cap:-100000,rep:-10,inn:0,cpty:0};
+      if(sc2)autoOpt={...sc2.opts[2]};
+      autoOpt.cap=(autoOpt.cap||0)-100000;
+      toast('⏰ Time expired! Auto-selected C + ₹1L penalty.','error');
+      document.querySelectorAll('.opt-btn').forEach((b,i)=>{if(i===2)b.classList.add('auto-selected');});
+      setTimeout(()=>resolveModal(playerIdx,autoOpt,'AUTO (Time Expired)'),800);
+    }
+  },1000);
+}
+
+function updateTimerDisplay(sec){
+  const circle=document.getElementById('timer-circle');
+  circle.style.strokeDashoffset=220*(1-sec/25);
+  if(sec>15){circle.className.baseVal='fill';document.getElementById('ti-status').textContent='Make your decision';}
+  else if(sec>8){circle.className.baseVal='fill warn';document.getElementById('ti-status').textContent='⚠ Decide soon';}
+  else{circle.className.baseVal='fill danger';document.getElementById('ti-status').textContent='🚨 Critical — choose now!';}
+  document.getElementById('timer-number').textContent=sec;
+  document.getElementById('ti-penalty').textContent=sec<=5?`Auto C + ₹1L penalty in ${sec}s`:'';
+}
+
+function clearTimerInterval(){if(G.timerInterval){clearInterval(G.timerInterval);G.timerInterval=null;}}
+
+function resolveModal(playerIdx,opt,label){
+  clearTimerInterval();
+  const p=G.players[playerIdx];
+  p.capital=Math.max(0,p.capital+(opt.cap||0));
+  p.reputation=Math.max(0,Math.min(100,p.reputation+(opt.rep||0)));
+  p.innovation=Math.max(0,Math.min(100,p.innovation+(opt.inn||0)));
+  p.capacity=Math.max(0,Math.min(100,p.capacity+(opt.cpty||0)));
+  const entry={player:p.name,emoji:p.emoji,sq:SQ[p.pos].n.replace(/\n/g,' '),choice:label,quarter:G.quarter,capDelta:opt.cap||0,ts:new Date().toLocaleTimeString()};
+  p.decisionHistory.push(entry);decisionLog.unshift(entry);
+  document.getElementById('modal-overlay').classList.remove('show');
+  document.getElementById('ti-penalty').textContent='';
+  toast(`${p.emoji} ${p.name}: ${label.substring(0,40)}`,'info');
+  G.movesThisQuarter++;advanceTurn();
+}
+
+function advanceTurn(){
+  G.cur=(G.cur+1)%G.players.length;
+  if(G.movesThisQuarter>=G.players.length){
+    G.movesThisQuarter=0;G.quarter++;
+    if(G.quarter>G.maxQuarters){setTimeout(endGame,500);return;}
+    toast(`📅 Quarter ${G.quarter} begins!`,'warn');
+  }
+  document.getElementById('dice-face').textContent='🎲';
+  document.getElementById('dice-number').textContent='';
+  document.getElementById('dice-btn').disabled=G.paused;
+  document.getElementById('board-status').textContent=`${G.players[G.cur].emoji} ${G.players[G.cur].name}'s turn — Roll!`;
+  renderAll();
+}
+
+function togglePause(){
+  G.paused=!G.paused;
+  document.getElementById('dice-btn').disabled=G.paused;
+  document.getElementById('board-status').textContent=G.paused?'⏸ Game Paused by Host':`${G.players[G.cur].emoji} ${G.players[G.cur].name}'s turn`;
+  document.getElementById('dice-label').textContent=G.paused?'⏸ Paused':`${G.players[G.cur].name}'s turn`;
+  toast(G.paused?'⏸ Game paused.':'▶ Game resumed.','warn');
+  if(G.paused)clearTimerInterval();
+}
+
+function forceNextTurn(){clearTimerInterval();document.getElementById('modal-overlay').classList.remove('show');toast('⏭ Turn skipped.','warn');G.movesThisQuarter++;advanceTurn();}
+function endQuarterNow(){clearTimerInterval();document.getElementById('modal-overlay').classList.remove('show');G.movesThisQuarter=G.players.length;toast('📅 Quarter ended.','warn');advanceTurn();}
+function endGameNow(){endGame();}
+function addPenalty(i,amount){G.players[i].capital=Math.max(0,G.players[i].capital-amount);toast(`⚠ ₹${fmtNum(amount)} penalty → ${G.players[i].name}`,'error');renderAll();refreshHostTable();}
+function removePlayer(i){G.players[i].capital=0;G.players[i].focusStatus='red';toast(`${G.players[i].emoji} ${G.players[i].name} removed.`,'error');renderAll();refreshHostTable();}
+
+function showHostDash(){refreshHostTable();document.getElementById('host-dash').classList.add('show');}
+function hideHostDash(){document.getElementById('host-dash').classList.remove('show');}
+
+function refreshHostTable(){
+  const tbody=document.getElementById('host-tbody');tbody.innerHTML='';
+  G.players.forEach((p,i)=>{
+    const fc=p.focusStatus==='green'?'green':p.focusStatus==='yellow'?'yellow':'red';
+    const ft=p.focusStatus==='green'?'● Active':p.focusStatus==='yellow'?'◑ Minor':'● Unstable';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${p.emoji} ${p.name}</td><td class="num-green">₹${fmtNum(p.capital)}</td><td>${p.reputation}</td><td>${p.innovation}</td><td>${p.capacity}</td><td style="font-size:.7rem">${SQ[p.pos].n.replace(/\n/g,' ')}</td><td>${G.quarter}</td><td><span class="focus-badge ${fc}">${ft}</span></td><td>${p.violations}</td><td><button class="hd-action-btn" onclick="addPenalty(${i},50000)">₹50K</button><button class="hd-action-btn red-btn" onclick="addPenalty(${i},200000)">₹2L</button><button class="hd-action-btn red-btn" onclick="removePlayer(${i})">Remove</button></td>`;
+    tbody.appendChild(tr);
+  });
+  const logEl=document.getElementById('decision-log');
+  logEl.innerHTML=decisionLog.slice(0,20).map(d=>`<div class="hist-row ${d.capDelta>=0?'gain':'loss'}">${d.ts} · ${d.emoji} <strong>${d.player}</strong> @ ${d.sq} → ${d.choice.substring(0,50)} <span style="color:${d.capDelta>=0?'var(--teal)':'var(--red)'};font-family:monospace">${d.capDelta>=0?'+':''}₹${fmtNum(Math.abs(d.capDelta))}</span></div>`).join('');
+}
+
+function initFocusDetection(){
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&G.started)handleFocusViolation('Tab switch detected');});
+  window.addEventListener('blur',()=>{if(G.started)handleFocusViolation('Window lost focus');});
+}
+
+function handleFocusViolation(reason){
+  const p=G.players[G.cur];if(!p)return;
+  p.violations++;
+  if(p.violations>=3&&p.focusStatus!=='red'){p.focusStatus='red';p.capital=Math.max(0,p.capital-200000);toast(`🚨 ${p.name}: 3 violations — ₹2L penalty!`,'error');}
+  else if(p.violations===2){p.focusStatus='yellow';}
+  document.getElementById('fw-msg').textContent=`${reason}. Violation #${p.violations} logged for ${p.name}.`;
+  document.getElementById('focus-warning').classList.add('show');
+  renderPlayerList();
+}
+
+function dismissFocusWarning(){document.getElementById('focus-warning').classList.remove('show');}
+
+function endGame(){
+  clearTimerInterval();
+  document.getElementById('modal-overlay').classList.remove('show');
+  document.getElementById('host-dash').classList.remove('show');
+  const scored=G.players.map(p=>{
+    const total=(p.capital/G.startCapital)*40+(p.reputation/100)*20+(p.innovation/100)*20+(p.capacity/100)*10+Math.max(0,10-p.violations*2);
+    return{...p,score:Math.round(total*10)/10};
+  }).sort((a,b)=>b.score-a.score);
+  const lb=document.getElementById('leaderboard-el');lb.innerHTML='';
+  scored.forEach((p,i)=>{
+    const row=document.createElement('div');row.className='lb-row';row.style.animationDelay=`${i*.08}s`;
+    row.innerHTML=`<div class="lb-rank">${i+1}</div><div class="lb-token">${p.emoji}</div><div><div class="lb-name">${p.name}</div><div class="lb-breakdown">₹${fmtNum(p.capital)} · Rep:${p.reputation} · Inn:${p.innovation} · Cap:${p.capacity}</div></div><div class="lb-score">${p.score}</div>`;
+    lb.appendChild(row);
+  });
+  switchScreen('end-screen');
+}
+
+function playAgain(){G={players:[],cur:0,quarter:1,maxQuarters:6,startCapital:1000000,paused:false,started:false,movesThisQuarter:0,timerInterval:null,timerSec:0,sessionCode:''};decisionLog=[];switchScreen('lobby-screen');buildLobby();}
+
+function switchScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function fmtNum(n){if(n>=10000000)return(n/10000000).toFixed(1)+'Cr';if(n>=100000)return(n/100000).toFixed(1)+'L';if(n>=1000)return(n/1000).toFixed(0)+'K';return n.toString();}
+function toast(msg,type='info'){const area=document.getElementById('toast-area');const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=msg;area.appendChild(el);setTimeout(()=>el.remove(),3100);}
+
+buildLobby();
+</script>
+</body>
+</html>

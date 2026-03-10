@@ -1,0 +1,169 @@
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("/assets/fonts/BricolageGrotesque-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Outfit";
+  src: url("/assets/fonts/Outfit-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 18 0.02 250;
+    --foreground: 95 0.01 250;
+    --card: 22 0.025 250;
+    --card-foreground: 92 0.01 250;
+    --popover: 20 0.025 250;
+    --popover-foreground: 92 0.01 250;
+    --primary: 78 0.18 85;
+    --primary-foreground: 15 0.02 85;
+    --secondary: 28 0.03 250;
+    --secondary-foreground: 82 0.01 250;
+    --muted: 25 0.025 250;
+    --muted-foreground: 58 0.04 250;
+    --accent: 68 0.22 55;
+    --accent-foreground: 15 0.02 55;
+    --destructive: 55 0.22 25;
+    --destructive-foreground: 95 0.01 25;
+    --border: 30 0.03 250;
+    --input: 28 0.03 250;
+    --ring: 78 0.18 85;
+    --radius: 0.5rem;
+    --chart-1: 65 0.2 145;
+    --chart-2: 60 0.2 220;
+    --chart-3: 75 0.18 85;
+    --chart-4: 55 0.22 30;
+    --chart-5: 65 0.18 310;
+    --sidebar: 16 0.02 250;
+    --sidebar-foreground: 92 0.01 250;
+    --sidebar-primary: 78 0.18 85;
+    --sidebar-primary-foreground: 15 0.02 85;
+    --sidebar-accent: 25 0.03 250;
+    --sidebar-accent-foreground: 82 0.01 250;
+    --sidebar-border: 28 0.03 250;
+    --sidebar-ring: 78 0.18 85;
+
+    /* Game tile colors */
+    --tile-start: 62 0.2 145;
+    --tile-bonus: 62 0.2 220;
+    --tile-penalty: 58 0.22 20;
+    --tile-decision: 72 0.2 80;
+    --tile-final: 65 0.22 310;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Outfit", sans-serif;
+    font-feature-settings: "cv11", "ss01";
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: "Bricolage Grotesque", sans-serif;
+  }
+}
+
+@layer utilities {
+  .tile-start {
+    background-color: oklch(var(--tile-start) / 0.2);
+    border-color: oklch(var(--tile-start) / 0.5);
+    color: oklch(var(--tile-start));
+  }
+  .tile-bonus {
+    background-color: oklch(var(--tile-bonus) / 0.2);
+    border-color: oklch(var(--tile-bonus) / 0.5);
+    color: oklch(var(--tile-bonus));
+  }
+  .tile-penalty {
+    background-color: oklch(var(--tile-penalty) / 0.2);
+    border-color: oklch(var(--tile-penalty) / 0.5);
+    color: oklch(var(--tile-penalty));
+  }
+  .tile-decision {
+    background-color: oklch(var(--tile-decision) / 0.2);
+    border-color: oklch(var(--tile-decision) / 0.5);
+    color: oklch(var(--tile-decision));
+  }
+  .tile-final {
+    background-color: oklch(var(--tile-final) / 0.2);
+    border-color: oklch(var(--tile-final) / 0.5);
+    color: oklch(var(--tile-final));
+  }
+
+  .gold-text {
+    color: oklch(var(--primary));
+  }
+  .glass {
+    background: oklch(var(--card) / 0.8);
+    backdrop-filter: blur(12px);
+  }
+
+  @keyframes dice-spin {
+    0% {
+      transform: rotate(0deg) scale(1);
+    }
+    25% {
+      transform: rotate(90deg) scale(1.2);
+    }
+    50% {
+      transform: rotate(180deg) scale(1);
+    }
+    75% {
+      transform: rotate(270deg) scale(1.1);
+    }
+    100% {
+      transform: rotate(360deg) scale(1);
+    }
+  }
+
+  @keyframes pulse-glow {
+    0%,
+    100% {
+      box-shadow: 0 0 8px oklch(var(--primary) / 0.4);
+    }
+    50% {
+      box-shadow: 0 0 20px oklch(var(--primary) / 0.8);
+    }
+  }
+
+  @keyframes float-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-dice {
+    animation: dice-spin 0.6s ease-in-out;
+  }
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  .animate-float-in {
+    animation: float-in 0.4s ease-out forwards;
+  }
+
+  .current-turn-highlight {
+    box-shadow: 0 0 0 2px oklch(var(--primary)), 0 0 12px
+      oklch(var(--primary) / 0.5);
+  }
+}
